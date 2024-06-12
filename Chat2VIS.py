@@ -8,7 +8,7 @@ import pandas as pd
 import openai
 import streamlit as st
 #import streamlit_nested_layout
-from classes import get_primer,format_question,run_request
+from classes import get_primer,format_question,run_request, summarize_graph
 import warnings
 warnings.filterwarnings("ignore")
 st.set_option('deprecation.showPyplotGlobalUse', False)
@@ -24,7 +24,7 @@ st.sidebar.markdown('</a> Developed by Paula Maddigan <a style="text-align: cent
 
 
 available_models = {"ChatGPT-4": "gpt-4","ChatGPT-3.5": "gpt-3.5-turbo","GPT-3": "text-davinci-003",
-                        "GPT-3.5 Instruct": "gpt-3.5-turbo-instruct","Code Llama":"CodeLlama-34b-Instruct-hf"}
+                        "GPT-3.5 Instruct": "gpt-3.5-turbo-instruct","Code Llama":"CodeLlama-34b-Instruct-hf", "Google Gemini": "gemini"}
 
 # List to hold datasets
 if "datasets" not in st.session_state:
@@ -42,9 +42,10 @@ else:
     # use the list already loaded
     datasets = st.session_state["datasets"]
 st.info("Note: Upgrade of Code Llama model is causing failures in plot generation. Fix under investigation...")
-key_col1,key_col2 = st.columns(2)
+key_col1, key_col2, key_col3 = st.columns(3)
 openai_key = key_col1.text_input(label = ":key: OpenAI Key:", help="Required for ChatGPT-4, ChatGPT-3.5, GPT-3, GPT-3.5 Instruct.",type="password")
 hf_key = key_col2.text_input(label = ":hugging_face: HuggingFace Key:",help="Required for Code Llama", type="password")
+gemini_key = key_col3.text_input(label=":gem: Google Gemini Key:", help="Required for Google Gemini", type="password")
 
 with st.sidebar:
     # First we want to choose the dataset, but we will fill it with choices once we've loaded one
@@ -87,7 +88,7 @@ model_count = len(selected_models)
 if go_btn and model_count > 0:
     api_keys_entered = True
     # Check API keys are entered.
-    if  "ChatGPT-4" in selected_models or "ChatGPT-3.5" in selected_models or "GPT-3" in selected_models or "GPT-3.5 Instruct" in selected_models:
+    if "ChatGPT-4" in selected_models or "ChatGPT-3.5" in selected_models or "GPT-3" in selected_models or "GPT-3.5 Instruct" in selected_models:
         if not openai_key.startswith('sk-'):
             st.error("Please enter a valid OpenAI API key.")
             api_keys_entered = False
@@ -95,12 +96,18 @@ if go_btn and model_count > 0:
         if not hf_key.startswith('hf_'):
             st.error("Please enter a valid HuggingFace API key.")
             api_keys_entered = False
+    if "Google Gemini" in selected_models:
+        if not gemini_key.startswith('AIza'):
+            st.error("Please enter a valid Google Gemini API key.")
+            api_keys_entered = False
+
     if api_keys_entered:
         # Place for plots depending on how many models
         plots = st.columns(model_count)
         # Get the primer for this dataset
         primer1,primer2 = get_primer(datasets[chosen_dataset],'datasets["'+ chosen_dataset + '"]') 
         # Create model, run the request and print the results
+        api_keys = {'openai_key': openai_key, 'hf_key': hf_key, 'gemini_key': gemini_key}
         for plot_num, model_type in enumerate(selected_models):
             with plots[plot_num]:
                 st.subheader(model_type)
@@ -109,13 +116,17 @@ if go_btn and model_count > 0:
                     question_to_ask = format_question(primer1, primer2, question, model_type)   
                     # Run the question
                     answer=""
-                    answer = run_request(question_to_ask, available_models[model_type], key=openai_key,alt_key=hf_key)
+                    answer = run_request(question_to_ask, available_models[model_type], api_keys)
                     # the answer is the completed Python script so add to the beginning of the script to it.
                     answer = primer2 + answer
                     print("Model: " + model_type)
                     print(answer)
                     plot_area = st.empty()
-                    plot_area.pyplot(exec(answer))           
+                    plot_area.pyplot(exec(answer))
+                    # Summarize the generated graph
+                    summary = summarize_graph(answer, available_models[model_type], api_keys)
+                    st.markdown(f"**Summary:** {summary}")
+
                 except Exception as e:
                     if type(e) == openai.error.APIError:
                         st.error("OpenAI API Error. Please try again a short time later. (" + str(e) + ")")
