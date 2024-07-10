@@ -101,6 +101,7 @@ if go_btn and model_count > 0:
             st.error("Please enter a valid Google Gemini API key.")
             api_keys_entered = False
 
+
     if api_keys_entered:
         # Place for plots depending on how many models
         plots = st.columns(model_count)
@@ -108,15 +109,17 @@ if go_btn and model_count > 0:
         primer1,primer2 = get_primer(datasets[chosen_dataset],'datasets["'+ chosen_dataset + '"]') 
         # Create model, run the request and print the results
         api_keys = {'openai_key': openai_key, 'hf_key': hf_key, 'gemini_key': gemini_key}
+
         for plot_num, model_type in enumerate(selected_models):
             with plots[plot_num]:
                 st.subheader(model_type)
                 try:
                     # Format the question 
-                    question_to_ask = format_question(primer1, primer2, question, model_type)   
+                    question_to_ask = format_question(primer1, primer2, question, model_type)
                     # Run the question
                     answer=""
                     answer = run_request(question_to_ask, available_models[model_type], api_keys)
+                    print(answer)
                     # the answer is the completed Python script so add to the beginning of the script to it.
                     answer = primer2 + answer
                     print("Model: " + model_type)

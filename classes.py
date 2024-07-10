@@ -8,6 +8,7 @@ import openai
 from langchain import HuggingFaceHub, LLMChain,PromptTemplate
 from transformers import pipeline
 import requests
+import google.generativeai as genai
 
 def run_request(question_to_ask, model_type, api_keys):
     if model_type == "gpt-4" or model_type == "gpt-3.5-turbo" :
@@ -29,10 +30,13 @@ def run_request(question_to_ask, model_type, api_keys):
     elif model_type == "gemini":
         # Google Gemini model
         gemini_key = api_keys.get('gemini_key')
-        headers = {"Authorization": f"Bearer {gemini_key}"}
+        headers = {"Authorization": f"Bearer {gemini_key}", "Content-Type": "application/json"}
         payload = {"prompt": question_to_ask, "max_tokens": 500}
         response = requests.post("https://api.google.com/gemini/generate", headers=headers, json=payload)
-        llm_response = response.json()['choices'][0]['text'].strip()
+        if response.status_code == 200:
+            llm_response = response.json()['choices'][0]['text'].strip()
+        else:
+            raise Exception(f"Google Gemini API error: {response.status_code}, {response.text}")
     else:
         # Hugging Face model
         llm = HuggingFaceHub(huggingfacehub_api_token = api_keys.get('hf_key'), repo_id="codellama/" + model_type, model_kwargs={"temperature":0.1, "max_new_tokens":500})
@@ -128,13 +132,11 @@ def summarize_graph(graph_code, model, api_keys):
             summary = response[0]['generated_text']
         elif model == "gemini":
             # Google Gemini model
-            headers = {"Authorization": f"Bearer {api_keys.get('gemini_key')}"}
-            payload = {"prompt": summary_prompt, "max_tokens": 150}
-            response = requests.post("https://api.google.com/gemini/generate", headers=headers, json=payload)
-            if response.status_code == 200:
-                summary = response.json()['choices'][0]['text'].strip()
-            else:
-                raise Exception(f"Google Gemini API error: {response.status_code}, {response.text}")
+            headers = {"Authorization": f"Bearer {api_keys.get('gemini_key')}",
+                       "Content-Type": "application/json"}
+            payload = {"prompt": summary_prompt, "max_tokens": 500}
+            model = genai.GenerativeModel('gemini-pro')
+            summary = model.generate_content(**payload)
         else:
             summary = "Summarizer model not supported."
         return summary
