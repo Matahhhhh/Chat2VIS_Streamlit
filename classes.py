@@ -10,6 +10,7 @@ from transformers import pipeline
 import requests
 import google.generativeai as genai
 
+
 def run_request(question_to_ask, model_type, api_keys):
     if model_type == "gpt-4" or model_type == "gpt-3.5-turbo" :
         # Run OpenAI ChatCompletion API
@@ -30,13 +31,41 @@ def run_request(question_to_ask, model_type, api_keys):
     elif model_type == "gemini":
         # Google Gemini model
         gemini_key = api_keys.get('gemini_key')
-        headers = {"Authorization": f"Bearer {gemini_key}", "Content-Type": "application/json"}
-        payload = {"prompt": question_to_ask, "max_tokens": 500}
-        response = requests.post("https://api.google.com/gemini/generate", headers=headers, json=payload)
+
+        payload = {
+            "system_instruction" :{
+                "parts" : {
+                    "text" : "you are a professional data analyst"
+                }
+            },
+            "contents":[
+                {
+                    "parts":[
+                        {
+                            "text": question_to_ask,
+                        }
+                    ]
+                }
+            ]
+        }
+
+        response = requests.post(f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={gemini_key}", json=payload)
+        print("test \n")
+        print(response)
         if response.status_code == 200:
-            llm_response = response.json()['choices'][0]['text'].strip()
+            try:
+                llm_response = response.json()['candidates'][0]['content']['parts'][0]['text']
+                llm_response = llm_response.replace("```python\n", "").replace("```", "")
+                print("Response from the model:", llm_response)
+            except KeyError:
+                print("Error parsing JSON response. Missing expected keys.")
+                print("Response text:", response.text)
+                llm_response = response.text
+                llm_response = llm_response.replace("```python\n", "").replace("```", "")
         else:
-            raise Exception(f"Google Gemini API error: {response.status_code}, {response.text}")
+            print(f"Request failed with status code {response.status_code}")
+            print("Response text:", response.text)
+
     else:
         # Hugging Face model
         llm = HuggingFaceHub(huggingfacehub_api_token = api_keys.get('hf_key'), repo_id="codellama/" + model_type, model_kwargs={"temperature":0.1, "max_new_tokens":500})
@@ -132,11 +161,38 @@ def summarize_graph(graph_code, model, api_keys):
             summary = response[0]['generated_text']
         elif model == "gemini":
             # Google Gemini model
-            headers = {"Authorization": f"Bearer {api_keys.get('gemini_key')}",
-                       "Content-Type": "application/json"}
-            payload = {"prompt": summary_prompt, "max_tokens": 500}
-            model = genai.GenerativeModel('gemini-pro')
-            summary = model.generate_content(**payload)
+            gemini_key = api_keys.get('gemini_key')
+
+            payload = {
+                "system_instruction" :{
+                    "parts" : {
+                        "text" : "you are a professional data analyst, do not describe the codes"
+                    }
+                },
+                "contents": [
+                    {
+                        "parts": [
+                            {
+                                "text": graph_code,  # user's input text
+                            }
+                        ],
+                    }
+                ],
+            }
+
+            summary = requests.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={gemini_key}",
+                json=payload)
+            if summary.status_code == 200:
+                try:
+                    summary = summary.json()['candidates'][0]['content']['parts'][0]['text']
+                    print("Response from the model:", summary)
+                except KeyError:
+                    print("Error parsing JSON response. Missing expected keys.")
+                    print("Response text:", summary.text)
+            else:
+                print(f"Request failed with status code {summary.status_code}")
+                print("Response text:", summary.text)
         else:
             summary = "Summarizer model not supported."
         return summary
