@@ -51,7 +51,6 @@ def run_request(question_to_ask, model_type, api_keys):
 
         response = requests.post(f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={gemini_key}", json=payload)
         print("test \n")
-        print(response)
         if response.status_code == 200:
             try:
                 llm_response = response.json()['candidates'][0]['content']['parts'][0]['text']
@@ -96,15 +95,25 @@ def format_response(res):
         res = res_before + res_after
     return res
 
-def format_question(primer_desc,primer_code , question, model_type):
+def format_question(primer_desc, primer_code, question, model_type):
     # Fill in the model_specific_instructions variable
     instructions = ""
     if model_type == "Code Llama":
         # Code llama tends to misuse the "c" argument when creating scatter plots
         instructions = "\nDo not use the 'c' argument in the plot function, use 'color' instead and only pass color names like 'green', 'red', 'blue'."
-    primer_desc = primer_desc.format(instructions)  
-    # Put the question at the end of the description primer within quotes, then add on the code primer.
-    return  '"""\n' + primer_desc + question + '\n"""\n' + primer_code
+        primer_desc = primer_desc.format(instructions)
+        # Put the question at the end of the description primer within quotes, then add on the code primer.
+        primer_desc = '"""\n' + primer_desc + question + '\n"""\n' + primer_code
+
+    elif model_type == "gemini":
+        primer_desc = primer_desc.format(instructions)
+        primer_desc = primer_desc + question
+
+    else:
+        primer_desc = primer_desc.format(instructions)
+        primer_desc = '"""\n' + primer_desc + question + '\n"""\n' + primer_code
+
+    return primer_desc
 
 def get_primer(df_dataset,df_name):
     # Primer function to take a dataframe and its name
@@ -166,7 +175,7 @@ def summarize_graph(graph_code, model, api_keys):
             payload = {
                 "system_instruction" :{
                     "parts" : {
-                        "text" : "you are a professional data analyst, do not describe the codes"
+                        "text" : summary_prompt
                     }
                 },
                 "contents": [
@@ -179,7 +188,6 @@ def summarize_graph(graph_code, model, api_keys):
                     }
                 ],
             }
-
             summary = requests.post(
                 f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={gemini_key}",
                 json=payload)

@@ -128,6 +128,7 @@ if go_btn and model_count > 0:
                     plot_area.pyplot(exec(answer))
                     # Summarize the generated graph
                     summary = summarize_graph(answer, available_models[model_type], api_keys)
+                    print(summary)
                     st.markdown(f"**Summary:** {summary}")
 
                 except Exception as e:
