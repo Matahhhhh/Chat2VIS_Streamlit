@@ -20,7 +20,7 @@ def run_request(question_to_ask, model_type, api_keys):
             task = task + " The script should only include code, no comments."
         openai.api_key = api_keys.get('openai_key')
         response = openai.ChatCompletion.create(model=model_type,
-            messages=[{"role":"system","content":task},{"role":"user","content":question_to_ask}])
+            messages=[{"role":"user","content":question_to_ask}])
         llm_response = response["choices"][0]["message"]["content"]
     elif model_type == "text-davinci-003" or model_type == "gpt-3.5-turbo-instruct":
         # Run OpenAI Completion API
@@ -32,11 +32,6 @@ def run_request(question_to_ask, model_type, api_keys):
         # Google Gemini model
         gemini_key = api_keys.get('gemini_key')
         payload = {
-            "system_instruction" :{
-                "parts" : {
-                    "text" : "you are a professional data analyst"
-                }
-            },
             "contents":[
                 {
                     "parts":[
@@ -145,7 +140,7 @@ def summarize_graph(graph_code, model, api_keys):
             openai.api_key = api_keys.get('openai_key')
             response = openai.ChatCompletion.create(
                 model=model,
-                messages=[{"role": "system", "content": "You are a professional data analyst."}, {"role": "user", "content": summary_prompt}],
+                messages=[{"role": "user", "content": summary_prompt}],
                 max_tokens=500,
                 n=1,
                 stop=None,
@@ -172,11 +167,6 @@ def summarize_graph(graph_code, model, api_keys):
             gemini_key = api_keys.get('gemini_key')
 
             payload = {
-                "system_instruction" :{
-                    "parts" : {
-                        "text" : summary_prompt
-                    }
-                },
                 "contents": [
                     {
                         "parts": [
