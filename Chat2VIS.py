@@ -119,7 +119,7 @@ if go_btn and model_count > 0:
                     # Run the question
                     answer=""
                     answer = run_request(question_to_ask, available_models[model_type], api_keys)
-                    print(answer)
+
                     # the answer is the completed Python script so add to the beginning of the script to it.
                     answer = primer2 + answer
                     print("Model: " + model_type)
