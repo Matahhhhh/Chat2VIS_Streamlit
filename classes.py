@@ -167,7 +167,7 @@ def summarize_graph(graph_code, model, api_keys):
         elif model == "gemini":
             # Google Gemini model
             gemini_key = api_keys.get('gemini_key')
-            role_prompt = "You are a professional data analyst."
+            role_prompt = "You are a professional data analyst, do not summarize the code but give valuable insights based on the graph"
             payload = {
                 "contents": [
                     {
