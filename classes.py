@@ -31,7 +31,6 @@ def run_request(question_to_ask, model_type, api_keys):
     elif model_type == "gemini":
         # Google Gemini model
         gemini_key = api_keys.get('gemini_key')
-
         payload = {
             "system_instruction" :{
                 "parts" : {
