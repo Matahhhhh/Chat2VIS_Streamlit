@@ -14,13 +14,13 @@ import google.generativeai as genai
 def run_request(question_to_ask, model_type, api_keys):
     if model_type == "gpt-4" or model_type == "gpt-3.5-turbo" :
         # Run OpenAI ChatCompletion API
-        task = "Generate Python Code Script."
+        task = ""
         if model_type == "gpt-4":
             # Ensure GPT-4 does not include additional comments
-            task = task + " The script should only include code, no comments."
+            task = task + ""
         openai.api_key = api_keys.get('openai_key')
         response = openai.ChatCompletion.create(model=model_type,
-            messages=[{"role":"system","content":task},{"role":"user","content":question_to_ask}])
+            messages=[{"role":"user","content":question_to_ask}])
         llm_response = response["choices"][0]["message"]["content"]
     elif model_type == "text-davinci-003" or model_type == "gpt-3.5-turbo-instruct":
         # Run OpenAI Completion API
@@ -32,11 +32,6 @@ def run_request(question_to_ask, model_type, api_keys):
         # Google Gemini model
         gemini_key = api_keys.get('gemini_key')
         payload = {
-            "system_instruction" :{
-                "parts" : {
-                    "text" : "you are a professional data analyst"
-                }
-            },
             "contents":[
                 {
                     "parts":[
@@ -119,33 +114,19 @@ def get_primer(df_dataset,df_name):
     # and the name of the columns
     # and any columns with less than 20 unique values it adds the values to the primer
     # and horizontal grid lines and labeling
-    primer_desc = "Use a dataframe called df from data_file.csv with columns '" \
-        + "','".join(str(x) for x in df_dataset.columns) + "'. "
-    for i in df_dataset.columns:
-        if len(df_dataset[i].drop_duplicates()) < 20 and df_dataset.dtypes[i]=="O":
-            primer_desc = primer_desc + "\nThe column '" + i + "' has categorical values '" + \
-                "','".join(str(x) for x in df_dataset[i].drop_duplicates()) + "'. "
-        elif df_dataset.dtypes[i]=="int64" or df_dataset.dtypes[i]=="float64":
-            primer_desc = primer_desc + "\nThe column '" + i + "' is type " + str(df_dataset.dtypes[i]) + " and contains numeric values. "   
-    primer_desc = primer_desc + "\nLabel the x and y axes appropriately."
-    primer_desc = primer_desc + "\nAdd a title. Set the fig suptitle as empty."
-    primer_desc = primer_desc + "{}" # Space for additional instructions if needed
-    primer_desc = primer_desc + "\nUsing Python version 3.9.12, create a script using the dataframe df to graph the following: "
-    pimer_code = "import pandas as pd\nimport matplotlib.pyplot as plt\n"
-    pimer_code = pimer_code + "fig,ax = plt.subplots(1,1,figsize=(10,4))\n"
-    pimer_code = pimer_code + "ax.spines['top'].set_visible(False)\nax.spines['right'].set_visible(False) \n"
-    pimer_code = pimer_code + "df=" + df_name + ".copy()\n"
-    return primer_desc,pimer_code
+    primer_desc = ""
+    primer_code = ""
+    return primer_desc,primer_code
 
 def summarize_graph(graph_code, model, api_keys):
-    summary_prompt = f"Analyze the dataset visualized by the following Python code. Provide a summary of the data, including key insights and significant patterns. Do not describe the code:\n\n{graph_code}\n\nSummary:"
+    summary_prompt = f"Summary:"
     try:
 
         if model in ["gpt-4", "gpt-3.5-turbo"]:
             openai.api_key = api_keys.get('openai_key')
             response = openai.ChatCompletion.create(
                 model=model,
-                messages=[{"role": "system", "content": "You are a professional data analyst."}, {"role": "user", "content": summary_prompt}],
+                messages=[{"role": "user", "content": summary_prompt}],
                 max_tokens=500,
                 n=1,
                 stop=None,
@@ -172,11 +153,6 @@ def summarize_graph(graph_code, model, api_keys):
             gemini_key = api_keys.get('gemini_key')
 
             payload = {
-                "system_instruction" :{
-                    "parts" : {
-                        "text" : summary_prompt
-                    }
-                },
                 "contents": [
                     {
                         "parts": [
