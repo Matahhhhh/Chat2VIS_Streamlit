@@ -125,7 +125,8 @@ def get_primer(df_dataset,df_name):
             primer_desc = primer_desc + "\nThe column '" + i + "' is type " + str(df_dataset.dtypes[i]) + " and contains numeric values. "
     primer_desc = primer_desc + "\nLabel the x and y axes appropriately."
     primer_desc = primer_desc + "\nAdd a title. Set the fig suptitle as empty."
-    primer_desc = primer_desc + "\nThe library to be used is specified, do not repeat the library. \nsome code is specified at the top as well, do not repeat it."
+    primer_desc = primer_desc + ("\nThe library to be used is specified, do not repeat the library. The library used are pandas and pyplot"
+                                 " \nsome code is specified at the top as well, do not repeat it.")
     primer_desc = primer_desc + "\n If a piechart is to be created, do not need to specify the x and y axis, use the ax object"# Space for additional instructions if needed
     primer_desc = primer_desc + "\nUsing Python version 3.9.12, create a script using the dataframe df to graph the following: "
     pimer_code = "import pandas as pd\nimport matplotlib.pyplot as plt\n"
@@ -167,7 +168,7 @@ def summarize_graph(graph_code, model, api_keys):
         elif model == "gemini":
             # Google Gemini model
             gemini_key = api_keys.get('gemini_key')
-            role_prompt = "You are a professional data analyst, do not summarize the code but give valuable insights based on the graph"
+            role_prompt = "You are a professional data analyst"
             payload = {
                 "contents": [
                     {
