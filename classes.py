@@ -17,7 +17,7 @@ def run_request(question_to_ask, model_type, api_keys):
         task = ""
         if model_type == "gpt-4":
             # Ensure GPT-4 does not include additional comments
-            task = task + ""
+            task = task + "The script should only include code, no comments."
         openai.api_key = api_keys.get('openai_key')
         response = openai.ChatCompletion.create(model=model_type,
             messages=[{"role":"system","content":task},{"role":"user","content":question_to_ask}])
@@ -31,24 +31,20 @@ def run_request(question_to_ask, model_type, api_keys):
     elif model_type == "gemini":
         # Google Gemini model
         gemini_key = api_keys.get('gemini_key')
+        role_prompt = "you are a professional data analyst"
         payload = {
-            "system_instruction" :{
-                "parts" : {
-                    "text" : "you are a professional data analyst"
-                }
-            },
             "contents":[
                 {
                     "parts":[
                         {
-                            "text": question_to_ask,
+                            "text": role_prompt + question_to_ask,
                         }
                     ]
                 }
             ]
         }
 
-        response = requests.post(f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={gemini_key}", json=payload)
+        response = requests.post(f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={gemini_key}", json=payload)
         print("test \n")
         if response.status_code == 200:
             try:
@@ -119,24 +115,23 @@ def get_primer(df_dataset,df_name):
     # and the name of the columns
     # and any columns with less than 20 unique values it adds the values to the primer
     # and horizontal grid lines and labeling
-    primer_desc = ""
-    pimer_code = ""
-    # primer_desc = " '" \
-    #     + "','".join(str(x) for x in df_dataset.columns) + "'. "
-    # for i in df_dataset.columns:
-    #     if len(df_dataset[i].drop_duplicates()) < 20 and df_dataset.dtypes[i]=="O":
-    #         primer_desc = primer_desc + "\nThe column '" + i + "' has categorical values '" + \
-    #             "','".join(str(x) for x in df_dataset[i].drop_duplicates()) + "'. "
-    #     elif df_dataset.dtypes[i]=="int64" or df_dataset.dtypes[i]=="float64":
-    #         primer_desc = primer_desc + "\nThe column '" + i + "' is type " + str(df_dataset.dtypes[i]) + " and contains numeric values. "
-    # primer_desc = primer_desc + "\nLabel the x and y axes appropriately."
-    # primer_desc = primer_desc + "\nAdd a title. Set the fig suptitle as empty."
-    # primer_desc = primer_desc + "{}" # Space for additional instructions if needed
-    # primer_desc = primer_desc + "\nUsing Python version 3.9.12, create a script using the dataframe df to graph the following: "
-    # pimer_code = "import pandas as pd\nimport matplotlib.pyplot as plt\n"
-    # pimer_code = pimer_code + "fig,ax = plt.subplots(1,1,figsize=(10,4))\n"
-    # pimer_code = pimer_code + "ax.spines['top'].set_visible(False)\nax.spines['right'].set_visible(False) \n"
-    # pimer_code = pimer_code + "df=" + df_name + ".copy()\n"
+    primer_desc = "Use a dataframe called df from data_file.csv with columns '" \
+        + "','".join(str(x) for x in df_dataset.columns) + "'. "
+    for i in df_dataset.columns:
+        if len(df_dataset[i].drop_duplicates()) < 20 and df_dataset.dtypes[i]=="O":
+            primer_desc = primer_desc + "\nThe column '" + i + "' has categorical values '" + \
+                "','".join(str(x) for x in df_dataset[i].drop_duplicates()) + "'. "
+        elif df_dataset.dtypes[i]=="int64" or df_dataset.dtypes[i]=="float64":
+            primer_desc = primer_desc + "\nThe column '" + i + "' is type " + str(df_dataset.dtypes[i]) + " and contains numeric values. "
+    primer_desc = primer_desc + "\nLabel the x and y axes appropriately."
+    primer_desc = primer_desc + "\nAdd a title. Set the fig suptitle as empty."
+    primer_desc = primer_desc + "\nThe library to be used is specified, do not repeat the library. \nsome code is specified at the top as well, do not repeat it."
+    primer_desc = primer_desc + "\n If a piechart is to be created, do not need to specify the x and y axis, use the ax object"# Space for additional instructions if needed
+    primer_desc = primer_desc + "\nUsing Python version 3.9.12, create a script using the dataframe df to graph the following: "
+    pimer_code = "import pandas as pd\nimport matplotlib.pyplot as plt\n"
+    pimer_code = pimer_code + "fig,ax = plt.subplots(1,1,figsize=(10,4))\n"
+    pimer_code = pimer_code + "ax.spines['top'].set_visible(False)\nax.spines['right'].set_visible(False) \n"
+    pimer_code = pimer_code + "df=" + df_name + ".copy()\n"
     return primer_desc,pimer_code
 
 def summarize_graph(graph_code, model, api_keys):
@@ -172,25 +167,20 @@ def summarize_graph(graph_code, model, api_keys):
         elif model == "gemini":
             # Google Gemini model
             gemini_key = api_keys.get('gemini_key')
-
+            role_prompt = "You are a professional data analyst."
             payload = {
-                "system_instruction" :{
-                    "parts" : {
-                        "text" : summary_prompt
-                    }
-                },
                 "contents": [
                     {
                         "parts": [
                             {
-                                "text": graph_code,  # user's input text
+                                "text": role_prompt + graph_code,  # user's input text
                             }
                         ],
                     }
                 ],
             }
             summary = requests.post(
-                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={gemini_key}",
+                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={gemini_key}",
                 json=payload)
             if summary.status_code == 200:
                 try:
