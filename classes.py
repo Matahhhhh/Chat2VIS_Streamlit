@@ -127,6 +127,7 @@ def get_primer(df_dataset,df_name):
     primer_desc = primer_desc + "\nAdd a title. Set the fig suptitle as empty."
     primer_desc = primer_desc + "\nThe library to be used is specified, do not repeat the library. \nsome code is specified at the top as well, do not repeat it."
     primer_desc = primer_desc + "\n If a piechart is to be created, do not need to specify the x and y axis, use the ax object"# Space for additional instructions if needed
+    primer_desc += "\n consider creating another sub table to do sql joins statements"
     primer_desc = primer_desc + "\nUsing Python version 3.9.12, create a script using the dataframe df to graph the following: "
     pimer_code = "import pandas as pd\nimport matplotlib.pyplot as plt\n"
     pimer_code = pimer_code + "fig,ax = plt.subplots(1,1,figsize=(10,4))\n"
