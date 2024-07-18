@@ -18,10 +18,7 @@ st.set_page_config(page_icon="chat2vis.png",layout="wide",page_title="Chat2VIS")
 st.markdown("<h1 style='text-align: center; font-weight:bold; font-family:comic sans ms; padding-top: 0rem;'> \
             Chat2VIS</h1>", unsafe_allow_html=True)
 st.markdown("<h2 style='text-align: center;padding-top: 0rem;'>Creating Visualisations using Natural Language \
-            with ChatGPT and Code Llama</h2>", unsafe_allow_html=True)
-
-st.sidebar.markdown('</a> Developed by Paula Maddigan <a style="text-align: center;padding-top: 0rem;" href="mailto: i.build.apps.4.u@gmail.com">:email:', unsafe_allow_html=True)
-
+            with ChatGPT, Code Llama and Google Gemini</h2>", unsafe_allow_html=True)
 
 available_models = {"ChatGPT-4": "gpt-4","ChatGPT-3.5": "gpt-3.5-turbo","GPT-3": "text-davinci-003",
                         "GPT-3.5 Instruct": "gpt-3.5-turbo-instruct","Code Llama":"CodeLlama-34b-Instruct-hf", "Google Gemini": "gemini"}

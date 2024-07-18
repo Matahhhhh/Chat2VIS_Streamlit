@@ -6,10 +6,7 @@
 
 import openai
 from langchain import HuggingFaceHub, LLMChain,PromptTemplate
-from transformers import pipeline
 import requests
-import google.generativeai as genai
-
 
 def run_request(question_to_ask, model_type, api_keys):
     if model_type == "gpt-4" or model_type == "gpt-3.5-turbo" :
@@ -161,10 +158,6 @@ def summarize_graph(graph_code, model, api_keys):
                 temperature=0.5
             )
             summary = response.choices[0].text.strip()
-        elif model == "CodeLlama-34b-Instruct-hf":
-            summarizer = pipeline("text-generation", model=model, api_key=api_keys.get('hf_key'))
-            response = summarizer(summary_prompt, max_length=150, num_return_sequences=1)
-            summary = response[0]['generated_text']
         elif model == "gemini":
             # Google Gemini model
             gemini_key = api_keys.get('gemini_key')
