@@ -1,7 +1,6 @@
 #################################################################################
 # Chat2VIS 
 # https://chat2vis.streamlit.app/
-# Paula Maddigan
 #################################################################################
 
 import pandas as pd
@@ -38,7 +37,6 @@ if "datasets" not in st.session_state:
 else:
     # use the list already loaded
     datasets = st.session_state["datasets"]
-st.info("Note: Upgrade of Code Llama model is causing failures in plot generation. Fix under investigation...")
 key_col1, key_col2, key_col3 = st.columns(3)
 openai_key = key_col1.text_input(label = ":key: OpenAI Key:", help="Required for ChatGPT-4, ChatGPT-3.5, GPT-3, GPT-3.5 Instruct.",type="password")
 hf_key = key_col2.text_input(label = ":hugging_face: HuggingFace Key:",help="Required for Code Llama", type="password")
